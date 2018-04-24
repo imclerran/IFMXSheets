@@ -131,9 +131,8 @@ namespace SpreadsheetEngine
             string value = "";
 
             var singleCellExpression = (SpreadsheetCell)GetCellFromStr(expression);
-            if (null != singleCellExpression) {
-                if (!singleCellExpression.Text.StartsWith("=") ||
-                    CheckForCycles(cellToInterpret, singleCellExpression)) {
+            if (null != singleCellExpression && singleCellExpression  != cellToInterpret) {
+                if (VerifyNoCycles(cellToInterpret, singleCellExpression)) {
                     value = String.IsNullOrEmpty(singleCellExpression.Value) ? "0" : singleCellExpression.Value;
                     Subscribe(cellToInterpret, singleCellExpression);
                 }
@@ -169,7 +168,7 @@ namespace SpreadsheetEngine
 
                 if (cellToGetValueFrom != null && cellToGetValueFrom != cellToInterpret) {
                     
-                    if (!CheckForCycles(cellToInterpret, cellToInterpret)) {
+                    if (!VerifyNoCycles(cellToInterpret, cellToInterpret)) {
                         return false;
                     }
                     Subscribe(cellToInterpret, cellToGetValueFrom);
@@ -196,13 +195,13 @@ namespace SpreadsheetEngine
         /// <param name="originCell">the originating cell to look for references to</param>
         /// <param name="cellToCheck">the cell whos subscribers should be checked</param>
         /// <returns>returns true if no loops, otherwise false</returns>
-        private bool CheckForCycles(SpreadsheetCell originCell, SpreadsheetCell cellToCheck) {
+        private bool VerifyNoCycles(SpreadsheetCell originCell, SpreadsheetCell cellToCheck) {
             foreach (var subscription in cellToCheck.Subscriptions) {
                 if (originCell == subscription) {
                     return false;
                 }
                 else {
-                    var noLoops = CheckForCycles(originCell, subscription);
+                    var noLoops = VerifyNoCycles(originCell, subscription);
                     if (!noLoops) {
                         return false;
                     }
